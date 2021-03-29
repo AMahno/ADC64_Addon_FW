@@ -20,3 +20,6 @@
 void I2C1_Slave_init(void);
 
 /*******************************************************************/
+
+extern volatile uint8_t ram_changed;
+extern volatile uint8_t i2c1_ram[];

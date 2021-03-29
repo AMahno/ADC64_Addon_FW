@@ -13,6 +13,8 @@ unsigned char i2c1_mode=I2C1_MODE_WAITING;
 volatile uint8_t i2c1_ram_adr=0;
 volatile uint8_t i2c1_ram[I2C1_RAM_SIZE+1];
 
+volatile uint8_t ram_changed;
+
 /*******************************************************************/
 uint8_t get_i2c1_ram(uint8_t adr) {
 		// Other addresses
@@ -21,6 +23,7 @@ uint8_t get_i2c1_ram(uint8_t adr) {
 
 void set_i2c1_ram(uint8_t adr, uint8_t val) {
 	i2c1_ram[adr] = val;
+	ram_changed = 1;
 	return;
 }
 
@@ -31,7 +34,7 @@ void I2C1_Slave_init(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     I2C_InitTypeDef  I2C_InitStructure;
 
-    //RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
@@ -70,6 +73,8 @@ void I2C1_Slave_init(void) {
     I2C_ITConfig(I2C1, I2C_IT_EVT, ENABLE); //Part of the STM32 I2C driver
     I2C_ITConfig(I2C1, I2C_IT_BUF, ENABLE);
     I2C_ITConfig(I2C1, I2C_IT_ERR, ENABLE); //Part of the STM32 I2C driver
+		
+		ram_changed = 0;
 }
 /*******************************************************************/
 

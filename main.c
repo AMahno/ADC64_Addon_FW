@@ -194,14 +194,32 @@ int main(void){
 	
 	volatile int i;
     while (1) {
+			
+			if(ram_changed){
+				volatile uint8_t channel_index;				
+				for(channel_index = 0; channel_index < 16; channel_index++){
+					SPIx_EnableSlave();
+					uint8_t DAC_control = ((channel_index & 0x03) << 1) | ((channel_index & 0x0C) << 4) | (1 << 4);
+					SPIx_Transfer(DAC_control);
+					SPIx_Transfer(i2c1_ram[channel_index*2]);
+					SPIx_Transfer(i2c1_ram[channel_index*2+1]);
+					for (i=0; i < 10; i++);
+					SPIx_DisableSlave();
+					ram_changed = 0;
+					for (i=0; i < 50; i++);
+				}
+			}
+			
 			for (i=0; i < 1000000; i++);
 			GPIO_ResetBits(GPIOC, GPIO_Pin_13);
+			/*
 				SPIx_EnableSlave();
 				SPIx_Transfer(0x10);
 				SPIx_Transfer(0xFF);
 				SPIx_Transfer(0xFF);
 				for (i=0; i < 10; i++);
 				SPIx_DisableSlave();
+			*/
     	for (i=0; i < 1000000; i++);
     	GPIO_SetBits(GPIOC, GPIO_Pin_13);
 	}
