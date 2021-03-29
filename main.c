@@ -18,14 +18,14 @@
  
 #define SPIx_RCC      RCC_APB2Periph_SPI1
 #define SPIx          SPI1
-#define SPI_GPIO_RCC  RCC_APB2Periph_GPIOB
+#define SPI_GPIO_RCC  RCC_APB2Periph_GPIOA
 #define SPI_GPIO_RCC_SS  RCC_APB2Periph_GPIOA
-#define SPI_GPIO      GPIOB
+#define SPI_GPIO      GPIOA
 #define SPI_GPIO_SS   GPIOA
-#define SPI_PIN_MOSI  GPIO_Pin_5
-#define SPI_PIN_MISO  GPIO_Pin_4
-#define SPI_PIN_SCK   GPIO_Pin_3
-#define SPI_PIN_SS    GPIO_Pin_15
+#define SPI_PIN_MOSI  GPIO_Pin_7
+#define SPI_PIN_MISO  GPIO_Pin_6
+#define SPI_PIN_SCK   GPIO_Pin_5
+#define SPI_PIN_SS    GPIO_Pin_4
  
  
 void SPIx_Init(void);
@@ -106,6 +106,13 @@ void init_GPIO(void){
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
+	
+	/* Initialize enable pins for DACs*/
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
 
@@ -118,7 +125,8 @@ void SPIx_Init()
     // Step 1: Initialize SPI
     RCC_APB2PeriphClockCmd(SPIx_RCC, ENABLE);
     SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_128;
-    SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+    //SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+		SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
     SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
     SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -131,8 +139,8 @@ void SPIx_Init()
     // Step 2: Initialize GPIO
     RCC_APB2PeriphClockCmd(SPI_GPIO_RCC, ENABLE);
 		RCC_APB2PeriphClockCmd(SPI_GPIO_RCC_SS, ENABLE);
-		GPIO_PinRemapConfig(GPIO_Remap_SPI1,ENABLE); 
-		GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
+		//GPIO_PinRemapConfig(GPIO_Remap_SPI1,ENABLE); 
+		//GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
     // GPIO pins for MOSI, MISO, and SCK
     GPIO_InitStruct.GPIO_Pin = SPI_PIN_MOSI | SPI_PIN_MISO | SPI_PIN_SCK;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -181,15 +189,21 @@ int main(void){
 	I2C1_Slave_init();
 	SPIx_Init();
 	
+	GPIO_ResetBits(GPIOB, GPIO_Pin_12);
+
+	
 	volatile int i;
     while (1) {
 			for (i=0; i < 1000000; i++);
 			GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-			SPIx_Transfer((uint8_t) '1');
-
+				SPIx_EnableSlave();
+				SPIx_Transfer(0x10);
+				SPIx_Transfer(0xFF);
+				SPIx_Transfer(0xFF);
+				for (i=0; i < 10; i++);
+				SPIx_DisableSlave();
     	for (i=0; i < 1000000; i++);
     	GPIO_SetBits(GPIOC, GPIO_Pin_13);
-			SPIx_Transfer((uint8_t) '0');
 	}
     	
 }

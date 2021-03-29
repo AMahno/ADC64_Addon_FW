@@ -31,7 +31,7 @@ void I2C1_Slave_init(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     I2C_InitTypeDef  I2C_InitStructure;
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+    //RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
